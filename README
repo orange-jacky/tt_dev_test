@@ -1,0 +1,79 @@
+1.prepare
+  one macbook pro
+2.install
+	2.1	install PostgreSQL
+
+	1)open a terminal, run 
+	brew install postgresql -v
+
+	2)start PostgreSQL
+	pg_ctl -D /usr/local/var/postgres -l /usr/local/var/postgres/server.log start
+
+	3)create a new user, username is tantan and set password empty 
+	createuser tantan -P
+
+	4)create a  database, the name is tantan, and the owner is tantan
+	createdb tantan -O tantan -E UTF8 -e
+
+	2.2 get third-party package
+
+	go get gopkg.in/pg.v4
+	go get github.com/gin-gonic/gin
+
+	2.3 copy directory tt  to  $GOPATH/src
+3.compile and run 	
+	open a terminal tab , run commands
+	first set go env. open .bash_profile
+		vi ~/.bash_profile
+		export GOPATH=/path/to/workspace
+		export PATH=$GOPATH/bin:$PATH
+	save and exit
+
+	3.1 compile 
+		go install tt
+	3.3 run (http use port 8080, must be sure it is avialable) 
+		tt
+4.test data
+	open a termial tab, run commands
+	4.1 add four new users
+
+    localhost:postgres fredlee$ curl -XPOST -d '{"name":"user1"}' "http://localhost:8080/users"
+	{"id":"1","name":"user1","type":"user"}
+
+	localhost:postgres fredlee$ curl -XPOST -d '{"name":"user2"}' "http://localhost:8080/users"
+	{"id":"2","name":"user2","type":"user"}
+
+	localhost:postgres fredlee$ curl -XPOST -d '{"name":"user3"}' "http://localhost:8080/users"
+	{"id":"3","name":"user3","type":"user"}
+
+	localhost:postgres fredlee$ curl -XPOST -d '{"name":"user4"}' "http://localhost:8080/users"
+	{"id":"4","name":"user4","type":"user"}
+
+	4.2 get all users
+	localhost:postgres fredlee$ curl -XGET "http://localhost:8080/users"
+	[{"id":"1","name":"user1","type":"user"},{"id":"2","name":"user2","type":"user"},{"id":"3","name":"user3","type":"user"},{"id":"4","name":"user4","type":"user"}]
+
+	4.3 create relationship state, make user2,user3, user4 like user1
+	localhost:postgres fredlee$ curl -XPUT -d '{"state":"liked"}' "http://localhost:8080/users/2/relationships/1"
+	{"user_id":"1","state":"liked","type":"relationship"}
+
+	localhost:postgres fredlee$ curl -XPUT -d '{"state":"liked"}' "http://localhost:8080/users/3/relationships/1"
+	{"user_id":"1","state":"liked","type":"relationship"}
+
+	localhost:postgres fredlee$ curl -XPUT -d '{"state":"liked"}' "http://localhost:8080/users/4/relationships/1"
+	{"user_id":"1","state":"liked","type":"relationship"}
+
+	4.4 get user1 all relationships
+	localhost:postgres fredlee$ curl -XGET "http://localhost:8080/users/1/relationships"
+	[{"user_id":"2","state":"liked","type":"relationship"},{"user_id":"3","state":"liked","type":"relationship"},{"user_id":"4","state":"liked","type":"relationship"}]
+
+	4.5 make user1 like user2
+	localhost:postgres fredlee$ curl -XPUT -d '{"state":"liked"}' "http://localhost:8080/users/1/relationships/2"
+	{"user_id":"2","state":"matched","type":"relationship"}
+
+	4.6 make user1 dislike user2
+	localhost:postgres fredlee$  curl -XPUT -d '{"state":"disliked"}' "http://localhost:8080/users/1/relationships/2"
+	{"user_id":"2","state":"disliked","type":"relationship"}
+
+
+
